@@ -7,9 +7,10 @@ class QBF:
     Quadratic Binary Function evaluator: f(x) = x^T A x
     """
 
-    def __init__(self, filename: str):
-        self.size, self.A = self.read_input(filename)
-        self.variables = [0.0] * self.size  # 0/1 vector representation
+    def __init__(self, n: int, A: list[list[float]]):
+        self.size = n
+        self.A = A
+        self.variables = [0.0] * n  # current solution vector
 
     # ------------------------
     # Evaluator methods
@@ -87,21 +88,8 @@ class QBF:
         return total
 
     # ------------------------
-    # Input and utilities
+    # Utilities
     # ------------------------
-    def read_input(self, filename: str):
-        """Reads the matrix A from a file. Returns size and matrix."""
-        A = []
-        with open(filename, 'r') as f:
-            lines = f.readlines()
-            size = int(lines[0].strip())
-            for i in range(size):
-                row = list(map(float, lines[i + 1].split()))
-                # Fill lower triangle with 0 if not provided (mirrors Java code)
-                if len(row) < size:
-                    row += [0.0] * (size - len(row))
-                A.append(row)
-        return size, A
 
     def print_matrix(self):
         for row in self.A:
