@@ -6,10 +6,10 @@ import Solution
 class ReactiveGRASP(GRASP):
     '''Implements the Reactive GRASP metaheuristic.'''
 
-    def __init__(self, obj_function: Evaluator, alpha_pool: list[float], iterations: int = 1, update_freq: int = 10, maximize: bool = False):
+    def __init__(self, obj_function: Evaluator, alpha_pool: list[float], iterations: int = 1, update_freq: int = 10, maximize: bool = True):
         super().__init__(obj_function, alpha=alpha_pool[0], iterations=iterations, maximize=maximize)
         
-        if alpha_pool is None:
+        if alpha_pool is None:git 
             self.alpha_pool = [0.1, 0.3, 0.5, 0.7, 0.9]
         else:
             self.alpha_pool = alpha_pool

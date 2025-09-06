@@ -20,7 +20,7 @@ class AbstractGRASP(ABC):
     verbose = True
     rng = random.Random(0)
 
-    def __init__(self, obj_function: Evaluator, alpha: float = 0.0, iterations: int = 1, maximize: bool = False):
+    def __init__(self, obj_function: Evaluator, alpha: float = 0.0, iterations: int = 1, maximize: bool = True):
         self.obj_function = obj_function
         self.alpha = alpha
         self.iterations = iterations
