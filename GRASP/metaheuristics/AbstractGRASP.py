@@ -1,4 +1,5 @@
 import random
+from problems import Evaluator
 from abc import ABC, abstractmethod
 
 '''
@@ -19,7 +20,7 @@ class AbstractGRASP(ABC):
     verbose = True
     rng = random.Random(0)
 
-    def __init__(self, obj_function, alpha: float = 0.0, iterations: int = 1):
+    def __init__(self, obj_function: Evaluator, alpha: float = 0.0, iterations: int = 1):
         self.obj_function = obj_function
         self.alpha = alpha
         self.iterations = iterations
@@ -30,64 +31,68 @@ class AbstractGRASP(ABC):
         self.best_sol = None
         self.sol = None
 
-        self.CL = []
-        self.RCL = []
+        self.CL = set()
+        self.RCL = set()
 
     # --- Abstract methods (must be implemented in subclasses) ---
     @abstractmethod
-    def makeCL(self):
+    def make_CL(self):
         """Creates the Candidate List of elements to enter the solution."""
         pass
 
     @abstractmethod
-    def makeRCL(self):
+    def make_RCL(self):
         """Creates the Restricted Candidate List of elements to enter the solution."""
         pass
 
     @abstractmethod
-    def updateCL(self):
+    def update_CL(self):
         """Updates the Candidate List according to the current solution."""
         pass
 
     @abstractmethod
-    def createEmptySol(self):
+    def create_empty_sol(self):
         """Creates and returns an empty solution."""
         pass
 
     @abstractmethod
-    def localSearch(self):
+    def local_search(self):
         """Performs local search and returns a locally optimal solution."""
         pass
 
     # --- Concrete methods ---
-    def constructiveHeuristic(self):
+    def constructive_heuristic(self):
         """Builds a feasible solution using the GRASP constructive heuristic."""
-        self.CL = self.makeCL()
-        self.RCL = self.makeRCL()
-        self.sol = self.createEmptySol()
+        self.CL = self.make_CL()
+        self.RCL = self.make_RCL()
+        self.sol = self.create_empty_sol()
         self.cost = float("inf")
 
-        while not self.constructiveStopCriteria():
+        while not self.constructive_stop_criteria():
             max_cost = float("-inf")
             min_cost = float("inf")
 
             self.cost = self.obj_function.evaluate(self.sol)
-            self.updateCL()
+            self.update_CL()
+
+            if not self.CL:
+                break
 
             # Evaluate candidate insertions
-            for c in self.CL:
-                delta = self.obj_function.evaluateInsertionCost(c, self.sol)
-                min_cost = min(min_cost, delta)
-                max_cost = max(max_cost, delta)
+            deltas = {c: self.obj_function.evaluate_insertion_cost(c, self.sol) for c in self.CL}
+            min_cost = min(deltas.values())
+            max_cost = max(deltas.values())
 
             # Build RCL with candidates within threshold
-            self.RCL = [
-                c for c in self.CL
-                if self.obj_function.evaluateInsertionCost(c, self.sol)
-                <= min_cost + self.alpha * (max_cost - min_cost)
-            ]
+            self.RCL = [c for c, delta in deltas.items() 
+                        if delta <= min_cost + self.alpha*(max_cost-min_cost)]
 
             # Pick a random candidate from RCL
+            if not self.RCL: 
+                """This ensures a strictly greedy choice if RCL is empty. 
+                Can happen with a very low alpha. Not good for diversification."""
+                break
+
             in_cand = self.rng.choice(self.RCL)
             self.CL.remove(in_cand)
             self.sol.add(in_cand)
@@ -98,19 +103,20 @@ class AbstractGRASP(ABC):
 
     def solve(self):
         """Executes GRASP and returns the best feasible solution found."""
-        self.best_sol = self.createEmptySol()
+        self.best_sol = self.create_empty_sol()
 
         for i in range(self.iterations):
-            self.constructiveHeuristic()
-            self.localSearch()
+            self.sol = self.constructive_heuristic()
+            self.local_search()
 
             if self.best_sol.cost > self.sol.cost:
                 self.best_sol = self.sol.copy()
                 if self.verbose:
-                    print(f"(Iter. {i}) BestSol = {self.best_sol}")
+                    print(f"(Iter. {i}) BestSol = {self.best_sol}, cost = {self.best_sol.cost}")
+
 
         return self.best_sol
 
-    def constructiveStopCriteria(self):
+    def constructive_stop_criteria(self):
         """Stops when adding new candidates no longer improves the solution."""
-        return not (self.cost > self.sol.cost)
+        return self.cost < self.sol.cost

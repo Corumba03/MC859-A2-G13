@@ -1,5 +1,3 @@
-
-
 class Solution:
     """
     Represents a solution in the GRASP framework.
@@ -11,7 +9,7 @@ class Solution:
 
     def __init__(self, other: "Solution" = None):
         if other is None:
-            self.elements = {}
+            self.elements = set()
             self.cost = float("inf")
         else:
             # Copy constructor
@@ -24,7 +22,7 @@ class Solution:
 
     def delete(self, elem):
         """Removes an element from the solution."""
-        self.elements.remove(elem)
+        self.elements.discard(elem)
     
     def exchange(self, elem_in, elem_out):
         """Returns a solution with elem_out removed and elem_in added."""
@@ -53,8 +51,9 @@ class Solution:
     def __iter__(self):
         return iter(self.elements)
 
-    def __getitem__(self, index):
-        return self.elements[index]
+    
+    def __contains__(self, item):
+        return item in self.elements
 
     def __str__(self):
         return f"Solution: cost=[{self.cost}], size=[{len(self.elements)}], elements={self.elements}"
