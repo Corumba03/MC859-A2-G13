@@ -1,4 +1,3 @@
-from solutions import Solution
 import Evaluator
 
 class QBF(Evaluator):
@@ -20,23 +19,23 @@ class QBF(Evaluator):
         return self.size
 
     # Returns the value of the objective function for a given solution
-    def evaluate(self, sol: Solution) -> float:
+    def evaluate(self, sol: set) -> float:
         self.set_variables(sol)
         sol.cost = self.evaluateQBF()
         return sol.cost
 
     # Returns the cost variation of inserting elem into sol
-    def evaluateInsertionCost(self, elem: int, sol: Solution) -> float:
+    def evaluateInsertionCost(self, elem: int, sol: set) -> float:
         self.set_variables(sol)
         return self.evaluateInsertionQBF(elem)
 
     # Returns the cost variation of removing elem from sol
-    def evaluateRemovalCost(self, elem: int, sol: Solution) -> float:
+    def evaluateRemovalCost(self, elem: int, sol: set) -> float:
         self.set_variables(sol)
         return self.evaluateRemovalQBF(elem)
 
     # Returns the cost variation of exchanging elem_out with elem_in in sol
-    def evaluateExchangeCost(self, elem_in: int, elem_out: int, sol: Solution) -> float:
+    def evaluateExchangeCost(self, elem_in: int, elem_out: int, sol: set) -> float:
         self.set_variables(sol)
         return self.evaluateExchangeQBF(elem_in, elem_out)
 
@@ -45,7 +44,7 @@ class QBF(Evaluator):
     # ------------------------
 
     # Creates a binary vector representation of the solution
-    def set_variables(self, sol: Solution):
+    def set_variables(self, sol: set):
         self.reset_variables()
         if sol and len(sol) > 0:
             for elem in sol:
@@ -62,6 +61,16 @@ class QBF(Evaluator):
             row_sum = sum(self.variables[j] * self.A[i][j] for j in range(self.size))
             total += row_sum * self.variables[i]
         return total
+    
+    # Contribution of a single variable to the QBF
+    def evaluateContributionQBF(self, i: int) -> float:
+        """Incremental contribution of a single variable to the QBF."""
+        total = sum(
+            self.variables[j] * (self.A[i][j] + self.A[j][i])
+            for j in range(self.size) if j != i
+        )
+        total += self.A[i][i]
+        return total
 
     # Incremental evaluations
     def evaluateInsertionQBF(self, i: int) -> float:
@@ -74,14 +83,6 @@ class QBF(Evaluator):
             return 0.0
         return -self.evaluateContributionQBF(i)
     
-    def evaluateContributionQBF(self, i: int) -> float:
-        """Incremental contribution of a single variable to the QBF."""
-        total = sum(
-            self.variables[j] * (self.A[i][j] + self.A[j][i])
-            for j in range(self.size) if j != i
-        )
-        total += self.A[i][i]
-        return total
 
     '''
     Incremental evaluation of exchanging elem_out with elem_in.
@@ -106,6 +107,9 @@ class QBF(Evaluator):
     # ------------------------
     # Utilities
     # ------------------------
+
+    def get_matrix(self) -> list[list[float]]:
+        return self.A
 
     def print_matrix(self):
         for row in self.A:
