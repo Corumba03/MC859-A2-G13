@@ -1,40 +1,26 @@
-class SetCover:
+class SetCover():
     """
     Generic Set Cover manager.
-    Each variable x_i is associated with a set S_i of elements it covers.
     Provides methods to check feasibility and filter candidates.
     """
 
-    def __init__(self, sets: list[list[int]]):
-        """
-        :param sets: list of sets S_i, where each S_i is a list of elements covered by variable i
-        """
+    def __init__(self, sets: list[set[int]], num_elements: int):
         self.sets = sets
-        # Determine total elements that need to be covered
-        self.num_elements = max((max(s) for s in sets if s), default=-1) + 1
+        self.num_elements = num_elements
+    
+    def getdomainSize(self) -> int:
+        return len(self.sets)
 
-    def is_feasible(self, solution: list[int]) -> bool:
+    def is_feasible(self, solution: set[int]) -> bool:
         """
         Checks if a solution covers all required elements.
-        :param solution: list of variable indices included in the solution
+        :param solution: list of sets selected (by their indices)
         :return: True if feasible, False otherwise
         """
         covered = set()
-        for i in solution:
+        for i in solution: # This builds the union of the sets in the solution
             covered.update(self.sets[i])
         return len(covered) == self.num_elements
-
-    def feasible_candidates(self, solution: list[int], candidates: list[int]) -> list[int]:
-        """
-        Filters a list of candidate variables and returns only those that
-        can be added without violating the coverage rules.
-        Currently a simple version that just returns all candidates.
-        Can be extended with more sophisticated feasibility checks.
-        :param solution: current solution
-        :param candidates: potential candidates to add
-        :return: list of feasible candidates
-        """
-        return candidates
 
     def coverage(self, solution: list[int]) -> set[int]:
         """
