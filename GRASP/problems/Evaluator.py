@@ -1,5 +1,4 @@
 from abc import ABC, abstractmethod
-from solutions import Solution  # Assuming Solution class is in solution.py
 
 '''
 The Evaluator interface gives to a problem the required functionality to
@@ -20,33 +19,33 @@ class Evaluator(ABC):
     """
 
     @abstractmethod
-    def getDomainSize(self) -> int:
+    def get_domain_size(self) -> int:
         """Returns the size of the problem domain (number of decision variables)."""
         pass
 
     @abstractmethod
-    def evaluate(self, sol: Solution) -> float:
+    def evaluate(self, sol: set[int]) -> float:
         """
         Returns the objective function value of a solution.
         """
         pass
 
     @abstractmethod
-    def evaluateInsertionCost(self, elem, sol: Solution) -> float:
+    def evaluate_insertion_cost(self, elem, sol: set[int]) -> float:
         """
         Returns the cost variation of inserting `elem` into `sol`.
         """
         pass
 
     @abstractmethod
-    def evaluateRemovalCost(self, elem, sol: Solution) -> float:
+    def evaluate_removal_cost(self, elem, sol: set[int]) -> float:
         """
         Returns the cost variation of removing `elem` from `sol`.
         """
         pass
 
     @abstractmethod
-    def evaluateExchangeCost(self, elem_in, elem_out, sol: Solution) -> float:
+    def evaluate_exchange_cost(self, elem_in, elem_out, sol: set[int]) -> float:
         """
         Returns the cost variation of exchanging `elem_out` with `elem_in` in `sol`.
         """

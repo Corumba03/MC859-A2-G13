@@ -26,24 +26,21 @@ class SCQBF(Evaluator):
         if self.is_feasible(sol):
             return self.QBF.evaluate(sol)
         return float("inf")
-    
-    def evaluate_contribution(self, i: int) -> float:
-        return self.QBF.evaluateContributionQBF(i)
 
     def evaluate_insertion_cost(self, elem: int, sol: set) -> float:
         if self.is_feasible(sol | {elem}):
-            return self.QBF.evaluateInsertionCost(elem, sol)
+            return self.QBF.evaluate_insertion_cost(elem, sol)
         return float("inf")
 
 
     def evaluate_removal_cost(self, elem: int, sol: set) -> float:
         if self.is_feasible(sol - {elem}):
-            return self.QBF.evaluateRemovalCost(elem, sol)
+            return self.QBF.evaluate_removal_cost(elem, sol)
         return float("inf")
 
     def evaluate_exchange_cost(self, elem_in: int, elem_out: int, sol: set) -> float:
         if self.is_feasible((sol - {elem_out}) | {elem_in}):
-            return self.QBF.evaluateExchangeCost(elem_in, elem_out, sol)
+            return self.QBF.evaluate_exchange_cost(elem_in, elem_out, sol)
         return float("inf")
 
     def get_domain_size(self) -> int:
