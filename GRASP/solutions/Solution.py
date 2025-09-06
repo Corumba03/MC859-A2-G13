@@ -9,16 +9,16 @@ class Solution:
 
     def __init__(self, other: "Solution" = None):
         if other is None:
-            self.elements = []
+            self.elements = {}
             self.cost = float("inf")
         else:
             # Copy constructor
-            self.elements = list(other.elements)
+            self.elements = set(other.elements)
             self.cost = other.cost
 
     def add(self, elem):
         """Adds an element to the solution."""
-        self.elements.append(elem)
+        self.elements.add(elem)
 
     def __len__(self):
         return len(self.elements)
