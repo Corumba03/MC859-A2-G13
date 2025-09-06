@@ -1,6 +1,7 @@
 import Evaluator
 import SetCover
 import QBF
+import Solution
 
 class SCQBF(Evaluator):
     '''
@@ -17,28 +18,28 @@ class SCQBF(Evaluator):
         self.SC = SetCover.SetCover(sets, n)
         self.QBF = QBF.QBF(n, A)
     
-    def is_feasible(self, sol: set) -> bool:
+    def is_feasible(self, sol: Solution) -> bool:
         return self.SC.is_feasible(sol)
 
     
     # If the solution is feasible, return its QBF value; otherwise, return -inf (infeasible)
-    def evaluate(self, sol: set) -> float:
+    def evaluate(self, sol: Solution) -> float:
         if self.is_feasible(sol):
             return self.QBF.evaluate(sol)
         return float("inf")
 
-    def evaluate_insertion_cost(self, elem: int, sol: set) -> float:
-        if self.is_feasible(sol | {elem}):
+    def evaluate_insertion_cost(self, elem: int, sol: Solution) -> float:
+        if self.is_feasible(sol.insert(elem)):
             return self.QBF.evaluate_insertion_cost(elem, sol)
         return float("inf")
 
 
-    def evaluate_removal_cost(self, elem: int, sol: set) -> float:
-        if self.is_feasible(sol - {elem}):
+    def evaluate_removal_cost(self, elem: int, sol: Solution) -> float:
+        if self.is_feasible(sol.remove(elem)):
             return self.QBF.evaluate_removal_cost(elem, sol)
         return float("inf")
 
-    def evaluate_exchange_cost(self, elem_in: int, elem_out: int, sol: set) -> float:
+    def evaluate_exchange_cost(self, elem_in: int, elem_out: int, sol: Solution) -> float:
         if self.is_feasible((sol - {elem_out}) | {elem_in}):
             return self.QBF.evaluate_exchange_cost(elem_in, elem_out, sol)
         return float("inf")

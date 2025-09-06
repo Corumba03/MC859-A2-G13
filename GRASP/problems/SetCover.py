@@ -1,3 +1,5 @@
+import Solution
+
 class SetCover():
     """
     Generic Set Cover manager.
@@ -17,24 +19,24 @@ class SetCover():
     def getSets(self) -> list[set[int]]:
         return self.sets
 
-    def is_feasible(self, solution: set) -> bool:
+    def is_feasible(self, sol: Solution) -> bool:
         """
         Checks if a solution covers all required elements.
         :param solution: list of sets selected (by their indices)
         :return: True if feasible, False otherwise
         """
         covered = set()
-        for i in solution: # This builds the union of the sets in the solution
+        for i in sol: # This builds the union of the sets in the solution
             covered.update(self.sets[i])
         return len(covered) == self.num_elements
 
-    def coverage(self, solution: set) -> set[int]:
+    def coverage(self, sol: Solution) -> set[int]:
         """
         Returns the set of elements covered by the current solution.
         :param solution: list of variable indices
         :return: set of covered elements
         """
         covered = set()
-        for i in solution:
+        for i in sol:
             covered.update(self.sets[i])
         return covered

@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+import Solution
 
 '''
 The Evaluator interface gives to a problem the required functionality to
@@ -24,28 +25,28 @@ class Evaluator(ABC):
         pass
 
     @abstractmethod
-    def evaluate(self, sol: set[int]) -> float:
+    def evaluate(self, sol: Solution) -> float:
         """
         Returns the objective function value of a solution.
         """
         pass
 
     @abstractmethod
-    def evaluate_insertion_cost(self, elem, sol: set[int]) -> float:
+    def evaluate_insertion_cost(self, elem, sol: Solution) -> float:
         """
         Returns the cost variation of inserting `elem` into `sol`.
         """
         pass
 
     @abstractmethod
-    def evaluate_removal_cost(self, elem, sol: set[int]) -> float:
+    def evaluate_removal_cost(self, elem, sol: Solution) -> float:
         """
         Returns the cost variation of removing `elem` from `sol`.
         """
         pass
 
     @abstractmethod
-    def evaluate_exchange_cost(self, elem_in, elem_out, sol: set[int]) -> float:
+    def evaluate_exchange_cost(self, elem_in, elem_out, sol: Solution) -> float:
         """
         Returns the cost variation of exchanging `elem_out` with `elem_in` in `sol`.
         """
