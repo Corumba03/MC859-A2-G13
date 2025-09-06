@@ -20,19 +20,22 @@ class AbstractGRASP(ABC):
     verbose = True
     rng = random.Random(0)
 
-    def __init__(self, obj_function: Evaluator, alpha: float = 0.0, iterations: int = 1):
+    def __init__(self, obj_function: Evaluator, alpha: float = 0.0, iterations: int = 1, maximize: bool = False):
         self.obj_function = obj_function
         self.alpha = alpha
         self.iterations = iterations
 
-        self.best_cost = float("inf")
-        self.cost = float("inf")
+        self.best_cost = float("-inf") if maximize else float("inf")
+        self.cost = float("-inf") if maximize else float("inf")
+
 
         self.best_sol = None
         self.sol = None
 
         self.CL = set()
         self.RCL = set()
+
+        self.maximize = maximize
 
     # --- Abstract methods (must be implemented in subclasses) ---
     @abstractmethod
@@ -84,8 +87,13 @@ class AbstractGRASP(ABC):
             max_cost = max(deltas.values())
 
             # Build RCL with candidates within threshold
-            self.RCL = [c for c, delta in deltas.items() 
-                        if delta <= min_cost + self.alpha*(max_cost-min_cost)]
+            if self.maximize:
+                threshold = max_cost - self.alpha * (max_cost - min_cost)
+                self.RCL = [c for c, delta in deltas.items() if delta >= threshold]
+            else:
+                threshold = min_cost + self.alpha * (max_cost - min_cost)
+                self.RCL = [c for c, delta in deltas.items() if delta <= threshold]
+
 
             # Pick a random candidate from RCL
             if not self.RCL: 
@@ -109,7 +117,9 @@ class AbstractGRASP(ABC):
             self.sol = self.constructive_heuristic()
             self.local_search()
 
-            if self.best_sol.cost > self.sol.cost:
+            if (self.maximize and self.sol.cost > self.best_sol.cost) or \
+                (not self.maximize and self.sol.cost < self.best_sol.cost):
+
                 self.best_sol = self.sol.copy()
                 if self.verbose:
                     print(f"(Iter. {i}) BestSol = {self.best_sol}, cost = {self.best_sol.cost}")
@@ -119,4 +129,7 @@ class AbstractGRASP(ABC):
 
     def constructive_stop_criteria(self):
         """Stops when adding new candidates no longer improves the solution."""
-        return self.cost < self.sol.cost
+        if self.maximize:
+            return self.cost >= self.sol.cost
+        else:
+            return self.cost <= self.sol.cost

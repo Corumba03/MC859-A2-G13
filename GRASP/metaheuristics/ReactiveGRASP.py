@@ -6,8 +6,8 @@ import Solution
 class ReactiveGRASP(GRASP):
     '''Implements the Reactive GRASP metaheuristic.'''
 
-    def __init__(self, obj_function: Evaluator, alpha_pool: list[float], iterations: int = 1, update_freq: int = 10):
-        super().__init__(obj_function, self.alpha, iterations)
+    def __init__(self, obj_function: Evaluator, alpha_pool: list[float], iterations: int = 1, update_freq: int = 10, maximize: bool = False):
+        super().__init__(obj_function, alpha=alpha_pool[0], iterations=iterations, maximize=maximize)
         
         if alpha_pool is None:
             self.alpha_pool = [0.1, 0.3, 0.5, 0.7, 0.9]
@@ -53,13 +53,18 @@ class ReactiveGRASP(GRASP):
             return self.RCL
 
         # Compute cost of adding each element separately in CL to the current solution
-        costs = {elem: self.obj_function.evaluate_insertion_cost(elem, self.sol) for elem in self.CL}
-        min_cost = min(costs.values())
-        max_cost = max(costs.values())
-        threshold = min_cost + self.alpha * (max_cost - min_cost)
+        deltas = {elem: self.obj_function.evaluate_insertion_cost(elem, self.sol) for elem in self.CL}
+        min_cost = min(deltas.values())
+        max_cost = max(deltas.values())
         
         # Build RCL based on threshold
-        self.RCL = {elem for elem, cost in costs.items() if cost <= threshold}
+        if self.maximize:
+            threshold = max_cost - self.alpha * (max_cost - min_cost)
+            self.RCL = {c for c, delta in deltas.items() if delta >= threshold}
+        else:
+            threshold = min_cost + self.alpha * (max_cost - min_cost)
+            self.RCL = {c for c, delta in deltas.items() if delta <= threshold}
+
         return self.RCL
     
     def update_CL(self): # TODO: Test with self.CL.discard(chosen) instead since CL will never shrink here for the SCQBF problem
@@ -67,6 +72,15 @@ class ReactiveGRASP(GRASP):
         Remove infeasible candidates (those that violate constraints if added)
         """
         self.CL = {elem for elem in self.CL if self.obj_function.is_feasible(self.sol.insert(elem))}
+
+    def is_improvement(self, new_cost: float, current_cost: float) -> bool:
+        """
+        Determines if the new cost is an improvement over the current cost.
+        """
+        if self.maximize:
+            return new_cost > current_cost
+        else:
+            return new_cost < current_cost
 
     def local_search(self, sol: Solution) -> Solution:
         """
@@ -84,10 +98,11 @@ class ReactiveGRASP(GRASP):
                 # Try removal
                 neighbor = best_sol.remove(elem_out)
                 self.obj_function.evaluate(neighbor)
-                if neighbor.cost < best_sol.cost:
+                if self.is_improvement(neighbor.cost, best_sol.cost):
                     best_sol = neighbor
                     improved = True
-                    break  # first-improvement → restart search
+                    break
+
             
             if not improved:
                 # Try exchanges
@@ -96,7 +111,7 @@ class ReactiveGRASP(GRASP):
                         if elem_in not in best_sol:
                             neighbor = best_sol.exchange(elem_in, elem_out)
                             self.obj_function.evaluate(neighbor)
-                            if neighbor.cost < best_sol.cost:
+                            if self.is_improvement(neighbor.cost, best_sol.cost):
                                 best_sol = neighbor
                                 improved = True
                                 break
@@ -112,7 +127,7 @@ class ReactiveGRASP(GRASP):
                     neighbor = best_sol.insert(elem_in)
                     self.obj_function.evaluate(neighbor)
 
-                    if neighbor.cost < best_sol.cost:
+                    if self.is_improvement(neighbor.cost, best_sol.cost):
                         best_sol = neighbor
                         improved = True
                         break
@@ -134,7 +149,7 @@ class ReactiveGRASP(GRASP):
             self.sol = self.local_search(self.sol)
 
             # Update best solution found
-            if self.sol.cost < self.best_sol.cost:
+            if self.is_improvement(self.sol.cost, self.best_sol.cost):
                 self.best_sol = self.sol.copy()
 
             # Update performance of the selected alpha
