@@ -1,6 +1,6 @@
 import random
-from problems import Evaluator
 from abc import ABC, abstractmethod
+from ..problems import Evaluator  # use relative import to problems
 
 '''
   Abstract class for metaheuristic GRASP (Greedy Randomized Adaptive Search
@@ -27,6 +27,7 @@ class AbstractGRASP(ABC):
 
         self.best_cost = float("-inf") if maximize else float("inf")
         self.cost = float("-inf") if maximize else float("inf")
+        self.last_cost = None
 
 
         self.best_sol = None
@@ -66,27 +67,25 @@ class AbstractGRASP(ABC):
     # --- Concrete methods ---
     def constructive_heuristic(self):
         """Builds a feasible solution using the GRASP constructive heuristic."""
-        self.CL = self.make_CL()
-        self.RCL = self.make_RCL()
         self.sol = self.create_empty_sol()
-        self.cost = float("inf")
+        self.sol.cost = self.obj_function.evaluate(self.sol)
+        self.last_cost = self.sol.cost
+        self.CL = self.make_CL()
 
-        while not self.constructive_stop_criteria():
-            max_cost = float("-inf")
-            min_cost = float("inf")
+        # Compute initial new_cost (dummy, will update in loop)
+        new_cost = self.last_cost
 
-            self.cost = self.obj_function.evaluate(self.sol)
+        while not self.constructive_stop_criteria(new_cost):
             self.update_CL()
-
             if not self.CL:
                 break
 
-            # Evaluate candidate insertions
+            # Compute insertion costs
             deltas = {c: self.obj_function.evaluate_insertion_cost(c, self.sol) for c in self.CL}
             min_cost = min(deltas.values())
             max_cost = max(deltas.values())
 
-            # Build RCL with candidates within threshold
+            # Build RCL
             if self.maximize:
                 threshold = max_cost - self.alpha * (max_cost - min_cost)
                 self.RCL = [c for c, delta in deltas.items() if delta >= threshold]
@@ -94,20 +93,20 @@ class AbstractGRASP(ABC):
                 threshold = min_cost + self.alpha * (max_cost - min_cost)
                 self.RCL = [c for c, delta in deltas.items() if delta <= threshold]
 
-
-            # Pick a random candidate from RCL
-            if not self.RCL: 
-                """This ensures a strictly greedy choice if RCL is empty. 
-                Can happen with a very low alpha. Not good for diversification."""
+            if not self.RCL:
                 break
 
             in_cand = self.rng.choice(self.RCL)
             self.CL.remove(in_cand)
             self.sol.add(in_cand)
-            self.obj_function.evaluate(self.sol)
+
+            new_cost = self.obj_function.evaluate(self.sol)
+            self.last_cost = new_cost
             self.RCL.clear()
 
         return self.sol
+
+
 
     def solve(self):
         """Executes GRASP and returns the best feasible solution found."""
@@ -126,10 +125,9 @@ class AbstractGRASP(ABC):
 
 
         return self.best_sol
-
-    def constructive_stop_criteria(self):
-        """Stops when adding new candidates no longer improves the solution."""
+    """Stops when adding new candidates no longer improves the solution."""
+    def constructive_stop_criteria(self, new_cost):
         if self.maximize:
-            return self.cost >= self.sol.cost
+            return new_cost <= self.last_cost  # stop if no strict improvement
         else:
-            return self.cost <= self.sol.cost
+            return new_cost >= self.last_cost

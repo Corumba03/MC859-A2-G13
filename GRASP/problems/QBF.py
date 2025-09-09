@@ -1,5 +1,6 @@
-import Evaluator
-import Solution
+from .Evaluator import Evaluator
+from .. import Solution
+
 
 class QBF(Evaluator):
     """

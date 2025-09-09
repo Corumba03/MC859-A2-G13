@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
-import Solution
+from .. import Solution
+
 
 '''
 The Evaluator interface gives to a problem the required functionality to

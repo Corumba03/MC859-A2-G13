@@ -7,10 +7,11 @@ class Solution:
     Basically a wrapper around a set with some utility methods.
     """
 
-    def __init__(self, other: "Solution" = None):
+    def __init__(self, other: "Solution" = None, maximize: bool = True):
+        self.maximize = maximize 
         if other is None:
             self.elements = set()
-            self.cost = float("inf")
+            self.cost = float('inf') if not self.maximize else float('-inf')
         else:
             # Copy constructor
             self.elements = set(other.elements)

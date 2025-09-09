@@ -1,38 +1,45 @@
-import AbstractGRASP as GRASP
-import random
-from problems import Evaluator
-import Solution
+from random import choices, Random
+from GRASP.metaheuristics.AbstractGRASP import AbstractGRASP as GRASP
+from GRASP.Solution import Solution
+from GRASP.problems import Evaluator
+
 
 class ReactiveGRASP(GRASP):
     '''Implements the Reactive GRASP metaheuristic.'''
 
-    def __init__(self, obj_function: Evaluator, alpha_pool: list[float], iterations: int = 1, update_freq: int = 10, maximize: bool = True):
-        super().__init__(obj_function, alpha=alpha_pool[0], iterations=iterations, maximize=maximize)
+    def __init__(
+            self, obj_function: Evaluator, 
+            alpha_pool: list[float] = None, 
+            iterations: int = 1, 
+            update_freq: int = 10, 
+            maximize: bool = True):
+        super().__init__(obj_function, alpha=0, iterations=iterations, maximize=maximize)
         
-        if alpha_pool is None:git 
+        if alpha_pool is None:
             self.alpha_pool = [0.1, 0.3, 0.5, 0.7, 0.9]
         else:
             self.alpha_pool = alpha_pool
-        self.probabilities = [1/len(alpha_pool)] * len(alpha_pool)
-        self.alpha_performance = [0.0] * len(alpha_pool)
+        self.probabilities = [1/len(self.alpha_pool)] * len(self.alpha_pool)
+        self.alpha_performance = [0.0] * len(self.alpha_pool)
 
         # Select initial alpha randomly
-        self.alpha = alpha_pool[0]
+        self.alpha = self.alpha_pool[0]
         
         # Track cumulative performance of each alpha
-        self.alpha_performance = [0.0] * len(alpha_pool)
-        self.alpha_counts = [0] * len(alpha_pool)
+        self.alpha_performance = [0.0] * len(self.alpha_pool)
+        self.alpha_counts = [0] * len(self.alpha_pool)
 
         self.iterations = iterations
         self.iteration_count = 0
 
         self.update_freq = update_freq
+
     
     def select_alpha(self):
         """
         Select an alpha from the pool according to the current probabilities.
         """
-        self.alpha = random.choices(self.alpha_pool, weights=self.probabilities)[0]
+        self.alpha = choices(self.alpha_pool, weights=self.probabilities)[0]
         return self.alpha
     
     def create_empty_sol(self):
@@ -71,7 +78,8 @@ class ReactiveGRASP(GRASP):
         """
         Remove infeasible candidates (those that violate constraints if added)
         """
-        self.CL = {elem for elem in self.CL if self.obj_function.is_feasible(self.sol.insert(elem))}
+        # All candidates are feasible
+        pass 
 
     def is_improvement(self, new_cost: float, current_cost: float) -> bool:
         """

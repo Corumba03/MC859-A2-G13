@@ -1,9 +1,9 @@
-import Evaluator
-import SetCover
-import QBF
-import Solution
+from .Evaluator import Evaluator
+from GRASP.Solution import Solution
+from .QBF import QBF
+from .SetCover import SetCover as SC
 
-class SCQBF(Evaluator):
+class SC_QBF(Evaluator):
     '''
     This class implements the Set Covering Quadratic Binary Function (SC-QBF) problem.
     The objective is to select a subset of sets that covers all elements while maximizing
@@ -15,10 +15,14 @@ class SCQBF(Evaluator):
         self.sets = sets
 
         # Calls the subproblem constructors (Set Cover and QBF)
-        self.SC = SetCover.SetCover(sets, n)
-        self.QBF = QBF.QBF(n, A)
+        self.SC = SC(sets, n)
+        self.QBF = QBF(n, A)
     
-    def is_feasible(self, sol: Solution) -> bool:
+    def is_feasible(self, sol: Solution):
+        """Checks if the solution satisfies the Set Cover constraints."""
+        if not sol or not sol.elements:
+            return False  # empty solution cannot be feasible
+
         return self.SC.is_feasible(sol)
 
     

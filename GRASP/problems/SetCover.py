@@ -1,4 +1,4 @@
-import Solution
+from .. import Solution
 
 class SetCover():
     """
@@ -6,12 +6,12 @@ class SetCover():
     Provides methods to check feasibility and filter candidates.
     """
 
-    _sets = None  # List of sets (each set is a set of integers)
-    _num_elements = 0  # Total number of elements to be covered
+    sets = None  # List of sets (each set is a set of integers)
+    num_elements = 0  # Total number of elements to be covered
 
     def __init__(self, sets: list[set[int]], num_elements: int):
-        self._sets = sets
-        self._num_elements = num_elements
+        self.sets = sets
+        self.num_elements = num_elements
     
     def getdomainSize(self) -> int:
         return len(self.sets)
@@ -22,7 +22,7 @@ class SetCover():
     def is_feasible(self, sol: Solution) -> bool:
         """
         Checks if a solution covers all required elements.
-        :param solution: list of sets selected (by their indices)
+        :param sol: list of sets selected (by their indices)
         :return: True if feasible, False otherwise
         """
         covered = set()
