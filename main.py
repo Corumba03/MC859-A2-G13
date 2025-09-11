@@ -14,27 +14,40 @@ def main():
     # Initialize list to hold the sets
     sets = []
 
-    # Read n sets of integers, one per line
+    # Read n sets of integers, one per line, and convert to 0-based indices
     for _ in range(n):
-        sets.append(set(map(int, input().split())))
+        sets.append(set(x - 1 for x in map(int, input().split())))
 
-    # Initialize list to hold the coefficient matrix
-    A = []
 
-    # Read n rows of the coefficient matrix (expected to be upper triangular)
-    for line in range(n):
-        line = list(map(int, input().split()))
-        A.append(line)
+    # Initialize and read the upper triangular matrix
+    upper_A = []
+    for i in range(n):
+        row = list(map(float, input().split()))
+        upper_A.append(row)
+
+    # Convert upper triangular to full n x n matrix (symmetric, fill lower triangle)
+    A = [[0 for _ in range(n)] for _ in range(n)]
+    for i in range(n):
+        for j in range(len(upper_A[i])):
+            A[i][j] = upper_A[i][j]
+            if i != j:
+                A[j][i] = upper_A[i][j]
 
     # Model creation
 
     solver = ReactiveGRASP(
         obj_function = SC_QBF(n, A, sets),
-        iterations=1
+        iterations=10,
+        alpha_pool= None,
     )
 
-    solution = solver.solve()
-    print(f"{solution}")
+    solutions = solver.solve()
+
+    for i, sol in enumerate(solutions):
+        if i == len(solutions) - 1:
+            print(f"\nFinal {sol}")
+        else:
+            print(f"(Iter. {i+1}) BestSol = {sol}")
 
 
 if __name__=='__main__':

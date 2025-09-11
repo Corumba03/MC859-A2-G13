@@ -32,18 +32,21 @@ class Solution:
         new_sol = self.copy()
         new_sol.delete(elem_out)
         new_sol.add(elem_in)
+        new_sol.cost = float("-inf") if self.maximize else float("inf")
         return new_sol
 
     def remove(self, elem):
         """Returns a solution without the given element."""
         new_sol = self.copy()
         new_sol.delete(elem)
+        new_sol.cost = float("-inf") if self.maximize else float("inf")
         return new_sol
     
     def insert(self, elem):
         """Returns a solution with the given element added."""
         new_sol = self.copy()
         new_sol.add(elem)
+        new_sol.cost = float("-inf") if self.maximize else float("inf")
         return new_sol
 
     def __len__(self):
@@ -52,12 +55,11 @@ class Solution:
     def __iter__(self):
         return iter(self.elements)
 
-    
     def __contains__(self, item):
         return item in self.elements
 
     def __str__(self):
-        return f"Solution: cost=[{self.cost}], size=[{len(self.elements)}], elements={self.elements}"
+        return f"Solution: cost=[{self.cost:.2f}], size=[{len(self.elements)}], elements={self.elements}"
 
     def copy(self) -> "Solution":
         """Returns a copy of this solution."""

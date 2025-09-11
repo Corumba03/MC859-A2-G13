@@ -13,30 +13,36 @@ class SetCover():
         self.sets = sets
         self.num_elements = num_elements
     
-    def getdomainSize(self) -> int:
+    def get_domain_size(self) -> int:
         return len(self.sets)
     
-    def getSets(self) -> list[set[int]]:
+    def get_sets(self) -> list[set[int]]:
         return self.sets
 
-    def is_feasible(self, sol: Solution) -> bool:
+    def is_feasible(self, sol) -> bool:
         """
         Checks if a solution covers all required elements.
-        :param sol: list of sets selected (by their indices)
-        :return: True if feasible, False otherwise
+        Accepts either a Solution object or an iterable of indices.
         """
+        if hasattr(sol, 'elements'):
+            indices = sol.elements
+        else:
+            indices = sol
         covered = set()
-        for i in sol: # This builds the union of the sets in the solution
+        for i in indices:
             covered.update(self.sets[i])
         return len(covered) == self.num_elements
 
-    def coverage(self, sol: Solution) -> set[int]:
+    def coverage(self, sol) -> set[int]:
         """
         Returns the set of elements covered by the current solution.
-        :param solution: list of variable indices
-        :return: set of covered elements
+        Accepts either a Solution object or an iterable of indices.
         """
+        if hasattr(sol, 'elements'):
+            indices = sol.elements
+        else:
+            indices = sol
         covered = set()
-        for i in sol:
+        for i in indices:
             covered.update(self.sets[i])
         return covered

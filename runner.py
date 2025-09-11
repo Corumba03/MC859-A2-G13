@@ -6,9 +6,16 @@ import glob
 def main():
     input_dir = "instances"   # Directory where input .txt files are stored
     log_dir = "logs"          # Directory where log files will be written
-    os.makedirs(log_dir, exist_ok=True)  # Create logs directory if it doesn't exist
 
-    t_out = 60 # Time limit for each instance
+    # Create logs directory if it doesn't exist, then clean it
+    os.makedirs(log_dir, exist_ok=True)
+    for f in glob.glob(os.path.join(log_dir, "*")):
+        try:
+            os.remove(f)
+        except Exception as e:
+            print(f"Warning: Could not remove {f}: {e}")
+
+    t_out = 600 # Time limit for each instance
 
     # Collect all .txt files from input_dir, sorted alphabetically
     files = sorted(glob.glob(os.path.join(input_dir, "*.txt")))
@@ -29,7 +36,7 @@ def main():
                 subprocess.run(
                     ["python", "main.py"],  # Command being executed
                     stdin=fin,              # Input redirected from current .txt file
-                    #stdout=fout,            # Output redirected to the log file
+                    stdout=fout,            # Output redirected to the log file
                     stderr=subprocess.STDOUT,  # Merge stderr into stdout
                     timeout=t_out              # Timeout in seconds (10s here)
                 )

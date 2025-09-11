@@ -2,15 +2,6 @@ import random
 from abc import ABC, abstractmethod
 from ..problems import Evaluator  # use relative import to problems
 
-'''
-  Abstract class for metaheuristic GRASP (Greedy Randomized Adaptive Search
-  Procedure). It consider a minimization problem.
-  
-  
-  This Python port is based on the original Java implementation by
-  ccavellucci, fusberti
-
-'''
 class AbstractGRASP(ABC):
     """
     Abstract class for metaheuristic GRASP (Greedy Randomized Adaptive Search Procedure).
@@ -23,18 +14,17 @@ class AbstractGRASP(ABC):
     def __init__(self, obj_function: Evaluator, alpha: float = 0.0, iterations: int = 1, maximize: bool = True):
         self.obj_function = obj_function
         self.alpha = alpha
-        self.iterations = iterations
+        self.iterations = iterations + 1  # +1 to account for 0-based indexing
 
         self.best_cost = float("-inf") if maximize else float("inf")
         self.cost = float("-inf") if maximize else float("inf")
         self.last_cost = None
 
-
         self.best_sol = None
         self.sol = None
 
-        self.CL = set()
-        self.RCL = set()
+        self.CL = []   # Candidate List
+        self.RCL = []  # Restricted Candidate List
 
         self.maximize = maximize
 
@@ -66,16 +56,19 @@ class AbstractGRASP(ABC):
 
     # --- Concrete methods ---
     def constructive_heuristic(self):
+        # Debug: print initial CL, all sets, and union of all sets
+        if hasattr(self.obj_function, 'SC') and hasattr(self.obj_function.SC, 'sets'):
+            union_all_sets = set()
+            for s in self.obj_function.SC.sets:
+                union_all_sets.update(s)
+
         """Builds a feasible solution using the GRASP constructive heuristic."""
         self.sol = self.create_empty_sol()
-        self.sol.cost = self.obj_function.evaluate(self.sol)
+        self.sol.cost = self.obj_function.evaluate(self.sol, allow_partial=True)
         self.last_cost = self.sol.cost
         self.CL = self.make_CL()
 
-        # Compute initial new_cost (dummy, will update in loop)
-        new_cost = self.last_cost
-
-        while not self.constructive_stop_criteria(new_cost):
+        while True:
             self.update_CL()
             if not self.CL:
                 break
@@ -85,14 +78,13 @@ class AbstractGRASP(ABC):
             min_cost = min(deltas.values())
             max_cost = max(deltas.values())
 
-            # Build RCL
+            # Build RCL based on alpha
             if self.maximize:
                 threshold = max_cost - self.alpha * (max_cost - min_cost)
                 self.RCL = [c for c, delta in deltas.items() if delta >= threshold]
             else:
                 threshold = min_cost + self.alpha * (max_cost - min_cost)
                 self.RCL = [c for c, delta in deltas.items() if delta <= threshold]
-
             if not self.RCL:
                 break
 
@@ -100,34 +92,72 @@ class AbstractGRASP(ABC):
             self.CL.remove(in_cand)
             self.sol.add(in_cand)
 
-            new_cost = self.obj_function.evaluate(self.sol)
+            new_cost = self.obj_function.evaluate(self.sol, allow_partial=True)
             self.last_cost = new_cost
             self.RCL.clear()
 
+            # Stop if cost does not improve AND solution is feasible
+            if self.constructive_stop_criteria(new_cost) and self.obj_function.is_feasible(self.sol):
+                break
+
+        # Guarantee feasibility: explicitly check coverage and greedily add sets until all elements are covered
+        if hasattr(self.obj_function, 'SC') and hasattr(self.obj_function.SC, 'coverage'):
+            covered = set(self.obj_function.SC.coverage(self.sol))
+            all_elements = set(range(self.obj_function.SC.num_elements))
+            # If not feasible, reconstruct CL to include all unused sets
+            if covered != all_elements:
+                used = set(self.sol.elements)
+                all_sets = set(range(len(self.obj_function.SC.sets)))
+                self.CL = all_sets - used
+            while covered != all_elements and self.CL:
+                # Pick a candidate that covers the most uncovered elements
+                best_cand = max(self.CL, key=lambda c: len(set(self.obj_function.SC.sets[c]) - covered))
+                self.CL.remove(best_cand)
+                self.sol.add(best_cand)
+                covered.update(self.obj_function.SC.sets[best_cand])
+                self.obj_function.evaluate(self.sol, allow_partial=True)
+
         return self.sol
 
-
-
     def solve(self):
-        """Executes GRASP and returns the best feasible solution found."""
-        self.best_sol = self.create_empty_sol()
+        """Executes GRASP and returns a list of best solutions per iteration."""
+        self.best_sol = None
+        best_solutions = []
 
         for i in range(self.iterations):
             self.sol = self.constructive_heuristic()
-            self.local_search()
+            # Final evaluation: only feasible solutions count
 
-            if (self.maximize and self.sol.cost > self.best_sol.cost) or \
-                (not self.maximize and self.sol.cost < self.best_sol.cost):
+            self.obj_function.evaluate(self.sol, allow_partial=False)
 
-                self.best_sol = self.sol.copy()
-                if self.verbose:
-                    print(f"(Iter. {i}) BestSol = {self.best_sol}, cost = {self.best_sol.cost}")
+            last_feasible = self.sol.copy()
+            self.sol = self.local_search(self.sol)
+            self.obj_function.evaluate(self.sol, allow_partial=False)
 
+            # Safeguard: if local search returns infeasible, revert to last feasible
+            if not self.obj_function.is_feasible(self.sol):
+                self.sol = last_feasible
+                self.obj_function.evaluate(self.sol, allow_partial=False)
 
-        return self.best_sol
-    """Stops when adding new candidates no longer improves the solution."""
+            # Only consider feasible, non-empty solutions
+            if self.obj_function.is_feasible(self.sol) and len(self.sol.elements) > 0:
+                if self.best_sol is None:
+                    self.best_sol = self.sol.copy()
+                elif (self.maximize and self.sol.cost > self.best_sol.cost):
+                    self.best_sol = self.sol.copy()
+                elif (not self.maximize and self.sol.cost < self.best_sol.cost):
+                    self.best_sol = self.sol.copy()
+                    self.best_sol = self.sol.copy()
+
+                best_solutions.append(self.sol.copy())
+
+        return best_solutions
+
     def constructive_stop_criteria(self, new_cost):
+        """Stops when adding new candidates no longer improves the solution."""
+        if self.last_cost is None:
+            return False
         if self.maximize:
-            return new_cost <= self.last_cost  # stop if no strict improvement
+            return new_cost <= self.last_cost
         else:
             return new_cost >= self.last_cost
