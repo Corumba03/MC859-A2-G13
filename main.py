@@ -1,5 +1,6 @@
 from GRASP import Solution
-from GRASP.metaheuristics import AbstractGRASP, ReactiveGRASP
+from GRASP.metaheuristics import AbstractGRASP, ReactiveGRASP, StandardGRASP, RandomGreedyGRASP
+#from GRASP.metaheuristics import StandardGRASP as StandardGRASP
 from GRASP.problems import Evaluator, QBF, SC_QBF, SetCover
 
 
@@ -34,13 +35,29 @@ def main():
                 A[j][i] = upper_A[i][j]
 
     # Model creation
-
+    """
     solver = ReactiveGRASP(
         obj_function = SC_QBF(n, A, sets),
         iterations=10,
         alpha_pool= None,
     )
-
+    
+    
+    solver = StandardGRASP(
+        obj_function = SC_QBF(n, A, sets),
+        iterations=10,
+        alpha_pool= None,
+    )
+    """
+    
+    solver = RandomGreedyGRASP(
+        obj_function = SC_QBF(n, A, sets),
+        iterations=20,
+        p=3,           # Os 3 primeiros passos são totalmente aleatórios
+        alpha=0.2,     # Os passos seguintes usam alpha=0.2 para criar a RCL
+        maximize=True
+    )
+    
     solutions = solver.solve()
 
     for i, sol in enumerate(solutions):

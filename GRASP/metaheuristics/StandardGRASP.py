@@ -9,26 +9,27 @@ class StandardGRASP(GRASP):
     def __init__(
         self, obj_function: Evaluator,  
         alpha_pool: list[float] = None,  
-        rand: random.Random = random,
+        #rand: random.Random = random,
+        rand: Random = Random(),
         iterations: int = 1,
         update_freq: int = 10, 
         maximize: bool = True):
         super().__init__(obj_function, alpha=0, iterations=iterations, maximize=maximize)
 
         if alpha_pool is None:
-            self.alpha_pool = [1.0]
+            self.alpha_pool = [1.0, 0.8]
         else:
             self.alpha_pool = alpha_pool
             
-        self.probabilities = rand.randrange(len(self.alpha_pool))
+        self.probabilities = [1 / len(self.alpha_pool)] * len(self.alpha_pool)
         self.alpha_performance = [0.0] * len(self.alpha_pool)
             
         # Select initial alpha randomly
         self.alpha = self.alpha_pool[0]
         
         # Track cumulative performance of each alpha
-        self.alpha_performance = [0.0] * len(self.alpha)
-        self.alpha_counts = [0] * len(self.alpha)
+        self.alpha_performance = [0.0] * len(self.alpha_pool)
+        self.alpha_counts = [0] * len(self.alpha_pool)
 
         self.iterations = iterations
         self.iteration_count = 0
@@ -189,7 +190,7 @@ class StandardGRASP(GRASP):
             # Update alpha performance
             alpha_index = self.alpha_pool.index(self.alpha)
             # Use the cost of the best solution found this iteration for performance
-             perf_cost = iter_best.cost if candidates else self.best_sol.cost
+            perf_cost = iter_best.cost if candidates else self.best_sol.cost
             self.alpha_performance[alpha_index] += 1 / (1 + abs(perf_cost))
             self.alpha_counts[alpha_index] += 1
 
