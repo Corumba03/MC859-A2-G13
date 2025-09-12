@@ -139,3 +139,68 @@ class StandardGRASP(GRASP):
                         break
 
         return best_sol
+
+    def solve(self):
+        """
+        Executes Reactive GRASP and returns a list of best solutions per iteration.
+        Ensures correct maximization/minimization logic for best solution selection.
+        """
+        self.best_sol = self.create_empty_sol()
+        self.obj_function.evaluate(self.best_sol)
+        best_solutions = []
+
+
+        for i in range(self.iterations):
+            self.iteration_count += 1
+            self.select_alpha()
+            self.sol = self.constructive_heuristic()
+            self.obj_function.evaluate(self.sol)
+
+            # Local search
+            local_sol = self.local_search(self.sol)
+            self.obj_function.evaluate(local_sol)
+
+            # Choose the best between constructive and local search for this iteration
+            candidates = []
+            for candidate in [self.sol, local_sol]:
+                feasible = self.obj_function.is_feasible(candidate)
+                self.obj_function.evaluate(candidate)
+                if feasible and candidate.elements:
+                    candidates.append(candidate)
+
+            if candidates:
+                # Pick the best candidate for this iteration
+                if self.maximize:
+                    iter_best = max(candidates, key=lambda s: s.cost)
+                else:
+                    iter_best = min(candidates, key=lambda s: s.cost)
+
+                # Update global best if needed
+                if (len(self.best_sol.elements) == 0 or
+                    (self.maximize and iter_best.cost > self.best_sol.cost) or
+                    (not self.maximize and iter_best.cost < self.best_sol.cost)):
+                    self.best_sol = iter_best.copy()
+
+                best_solutions.append(self.best_sol.copy())
+            else:
+                # No feasible solution found this iteration, append current best
+                best_solutions.append(self.best_sol.copy())
+
+            # Update alpha performance
+            alpha_index = self.alpha_pool.index(self.alpha)
+            # Use the cost of the best solution found this iteration for performance
+             perf_cost = iter_best.cost if candidates else self.best_sol.cost
+            self.alpha_performance[alpha_index] += 1 / (1 + abs(perf_cost))
+            self.alpha_counts[alpha_index] += 1
+
+            # Periodically update probabilities based on performance
+            if (i + 1) % self.update_freq == 0:
+                total_performance = sum(self.alpha_performance)
+                if total_performance > 0:
+                    self.probabilities = [perf / total_performance for perf in self.alpha_performance]
+                else:
+                    self.probabilities = [1 / len(self.alpha_pool)] * len(self.alpha_pool)
+                self.alpha_performance = [0.0] * len(self.alpha_pool)
+                self.alpha_counts = [0] * len(self.alpha_pool)
+
+        return best_solutions
