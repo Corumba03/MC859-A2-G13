@@ -15,7 +15,7 @@ def main():
         except Exception as e:
             print(f"Warning: Could not remove {f}: {e}")
 
-    t_out = 600 # Time limit for each instance
+    t_out = 60*30 # Time limit for each instance
 
     # Collect all .txt files from input_dir, sorted alphabetically
     files = sorted(glob.glob(os.path.join(input_dir, "*.txt")))

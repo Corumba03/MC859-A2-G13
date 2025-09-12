@@ -11,8 +11,10 @@ class ReactiveGRASP(GRASP):
             alpha_pool: list[float] = None, 
             iterations: int = 1, 
             update_freq: int = 10, 
-            maximize: bool = True):
-        super().__init__(obj_function, alpha=0, iterations=iterations, maximize=maximize)
+            maximize: bool = True,
+            search_type: str = 'first',
+            constructive_type: str = 'std'):
+        super().__init__(obj_function, alpha=0, iterations=iterations, maximize=maximize, constructive_type=constructive_type)
         
         if alpha_pool is None:
             self.alpha_pool = [0.1, 0.3, 0.5, 0.7, 0.9]
@@ -30,6 +32,8 @@ class ReactiveGRASP(GRASP):
 
         self.iterations = iterations
         self.iteration_count = 0
+        self.search_type = search_type  # 'first' or 'best'
+        self.constructive_type = constructive_type  # 'std', 'max_coverage', 'cost_ratio'
 
         self.update_freq = update_freq
 
@@ -89,58 +93,6 @@ class ReactiveGRASP(GRASP):
             return new_cost > current_cost
         else:
             return new_cost < current_cost
-
-    def local_search(self, sol: Solution) -> Solution:
-        """
-        Applies first-improvement local search on the given solution.
-        """
-        improved = True
-        best_sol = sol.copy()
-        self.obj_function.evaluate(best_sol)
-
-        while improved:
-            improved = False
-            # Explore all neighbors (insertion, removal, exchange)
-            
-            for elem_out in best_sol:
-                # Try removal
-                neighbor = best_sol.remove(elem_out)
-                self.obj_function.evaluate(neighbor)
-                if self.is_improvement(neighbor.cost, best_sol.cost):
-                    best_sol = neighbor
-                    improved = True
-                    break
-
-            
-            if not improved:
-                # Try exchanges
-                for elem_out in best_sol:
-                    for elem_in in range(self.obj_function.get_domain_size()):
-                        if elem_in not in best_sol:
-                            neighbor = best_sol.exchange(elem_in, elem_out)
-                            self.obj_function.evaluate(neighbor)
-                            if self.is_improvement(neighbor.cost, best_sol.cost):
-                                best_sol = neighbor
-                                improved = True
-                                break
-                    if improved:
-                        break
-
-            if improved:
-                continue
-
-            # Try pure insertions if no improvement yet
-            for elem_in in range(self.obj_function.get_domain_size()):
-                if elem_in not in best_sol:
-                    neighbor = best_sol.insert(elem_in)
-                    self.obj_function.evaluate(neighbor)
-
-                    if self.is_improvement(neighbor.cost, best_sol.cost):
-                        best_sol = neighbor
-                        improved = True
-                        break
-
-        return best_sol
     
     def solve(self):
         """
@@ -155,11 +107,19 @@ class ReactiveGRASP(GRASP):
         for i in range(self.iterations):
             self.iteration_count += 1
             self.select_alpha()
-            self.sol = self.constructive_heuristic()
+            if self.constructive_type == 'std':
+                self.sol = self.constructive_heuristic()
+            elif self.constructive_type == 'max_coverage':
+                self.sol = self.constructive_greedy_max_coverage()
+            elif self.constructive_type == 'cost_ratio':
+                self.sol = self.constructive_greedy_cost_ratio()
             self.obj_function.evaluate(self.sol)
 
             # Local search
-            local_sol = self.local_search(self.sol)
+            if self.search_type == 'first':
+                local_sol = self.local_search_first(self.sol)
+            else:
+                local_sol = self.local_search_best(self.sol)
             self.obj_function.evaluate(local_sol)
 
             # Choose the best between constructive and local search for this iteration

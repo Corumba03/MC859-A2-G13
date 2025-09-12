@@ -1,6 +1,7 @@
 import random
 from abc import ABC, abstractmethod
 from ..problems import Evaluator  # use relative import to problems
+from ..Solution import Solution
 
 class AbstractGRASP(ABC):
     """
@@ -11,7 +12,11 @@ class AbstractGRASP(ABC):
     verbose = True
     rng = random.Random(0)
 
-    def __init__(self, obj_function: Evaluator, alpha: float = 0.0, iterations: int = 1, maximize: bool = True):
+    def __init__(self, obj_function: Evaluator, 
+                 alpha: float = 0.0, 
+                 iterations: int = 1, 
+                 maximize: bool = True,
+                 constructive_type: str = 'std'):
         self.obj_function = obj_function
         self.alpha = alpha
         self.iterations = iterations + 1  # +1 to account for 0-based indexing
@@ -47,11 +52,6 @@ class AbstractGRASP(ABC):
     @abstractmethod
     def create_empty_sol(self):
         """Creates and returns an empty solution."""
-        pass
-
-    @abstractmethod
-    def local_search(self):
-        """Performs local search and returns a locally optimal solution."""
         pass
 
     # --- Concrete methods ---
@@ -118,6 +118,155 @@ class AbstractGRASP(ABC):
                 self.obj_function.evaluate(self.sol, allow_partial=True)
 
         return self.sol
+    
+    def local_search_first(self, sol: Solution) -> Solution:
+        """
+        Applies first-improvement local search on the given solution.
+        """
+        improved = True
+        best_sol = sol.copy()
+        self.obj_function.evaluate(best_sol)
+
+        while improved:
+            improved = False
+            # Explore all neighbors (insertion, removal, exchange)
+            
+            for elem_out in best_sol:
+                # Try removal
+                neighbor = best_sol.remove(elem_out)
+                self.obj_function.evaluate(neighbor)
+                if self.is_improvement(neighbor.cost, best_sol.cost):
+                    best_sol = neighbor
+                    improved = True
+                    break
+
+            
+            if not improved:
+                # Try exchanges
+                for elem_out in best_sol:
+                    for elem_in in range(self.obj_function.get_domain_size()):
+                        if elem_in not in best_sol:
+                            neighbor = best_sol.exchange(elem_in, elem_out)
+                            self.obj_function.evaluate(neighbor)
+                            if self.is_improvement(neighbor.cost, best_sol.cost):
+                                best_sol = neighbor
+                                improved = True
+                                break
+                    if improved:
+                        break
+
+            if improved:
+                continue
+
+            # Try pure insertions if no improvement yet
+            for elem_in in range(self.obj_function.get_domain_size()):
+                if elem_in not in best_sol:
+                    neighbor = best_sol.insert(elem_in)
+                    self.obj_function.evaluate(neighbor)
+
+                    if self.is_improvement(neighbor.cost, best_sol.cost):
+                        best_sol = neighbor
+                        improved = True
+                        break
+
+        return best_sol
+    
+    def local_search_best(self, sol: Solution) -> Solution:
+        """
+        Applies best-improving (steepest) local search on the given solution.
+        """
+        improved = True
+        best_sol = sol.copy()
+        self.obj_function.evaluate(best_sol)
+
+        while improved:
+            improved = False
+            best_move = None
+            best_neighbor = None
+            best_delta = 0
+
+            # Try all removals
+            for elem_out in best_sol:
+                neighbor = best_sol.remove(elem_out)
+                self.obj_function.evaluate(neighbor)
+                delta = neighbor.cost - best_sol.cost
+                if self.is_improvement(neighbor.cost, best_sol.cost):
+                    if not improved or (self.maximize and delta > best_delta) or (not self.maximize and delta < best_delta):
+                        improved = True
+                        best_move = ('remove', elem_out)
+                        best_neighbor = neighbor
+                        best_delta = delta
+
+            # Try all exchanges
+            for elem_out in best_sol:
+                for elem_in in range(self.obj_function.get_domain_size()):
+                    if elem_in not in best_sol:
+                        neighbor = best_sol.exchange(elem_in, elem_out)
+                        self.obj_function.evaluate(neighbor)
+                        delta = neighbor.cost - best_sol.cost
+                        if self.is_improvement(neighbor.cost, best_sol.cost):
+                            if not improved or (self.maximize and delta > best_delta) or (not self.maximize and delta < best_delta):
+                                improved = True
+                                best_move = ('exchange', elem_in, elem_out)
+                                best_neighbor = neighbor
+                                best_delta = delta
+
+            # Try all insertions
+            for elem_in in range(self.obj_function.get_domain_size()):
+                if elem_in not in best_sol:
+                    neighbor = best_sol.insert(elem_in)
+                    self.obj_function.evaluate(neighbor)
+                    delta = neighbor.cost - best_sol.cost
+                    if self.is_improvement(neighbor.cost, best_sol.cost):
+                        if not improved or (self.maximize and delta > best_delta) or (not self.maximize and delta < best_delta):
+                            improved = True
+                            best_move = ('insert', elem_in)
+                            best_neighbor = neighbor
+                            best_delta = delta
+
+            if improved and best_neighbor is not None:
+                best_sol = best_neighbor
+
+        return best_sol
+    
+    def constructive_greedy_max_coverage(self):
+        sol = self.create_empty_sol()
+        covered = set()
+        all_elements = set.union(*self.obj_function.sets)
+        sets = self.obj_function.sets.copy()
+        while covered != all_elements:
+            # Find the set that covers the most new elements
+            best_set = max(
+                sets,
+                key=lambda s: len(s - covered)
+            )
+            idx = self.obj_function.sets.index(best_set)
+            sol = sol.insert(idx)
+            covered |= best_set
+            sets.remove(best_set)
+        self.obj_function.evaluate(sol)
+        return sol
+    
+    def constructive_greedy_cost_ratio(self):
+        sol = self.create_empty_sol()
+        covered = set()
+        all_elements = set.union(*self.obj_function.sets)
+        sets = self.obj_function.sets.copy()
+        while covered != all_elements:
+            # Find the set with the best cost-to-new-coverage ratio
+            best_set = min(
+                sets,
+                key=lambda s: (
+                    self.obj_function.evaluate_insertion_cost(self.obj_function.sets.index(s), sol) /
+                    (len(s - covered) or 1)
+                )
+            )
+            idx = self.obj_function.sets.index(best_set)
+            sol = sol.insert(idx)
+            covered |= best_set
+            sets.remove(best_set)
+        self.obj_function.evaluate(sol)
+        return sol
 
     def solve(self):
         """Executes GRASP and returns a list of best solutions per iteration."""

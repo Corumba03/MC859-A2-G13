@@ -38,7 +38,9 @@ def main():
     solver = ReactiveGRASP(
         obj_function = SC_QBF(n, A, sets),
         iterations=10,
-        alpha_pool= None,
+        alpha_pool= [0.8],
+        constructive_type='cost_ratio',
+        search_type='first'
     )
 
     solutions = solver.solve()
@@ -48,6 +50,7 @@ def main():
             print(f"\nFinal {sol}")
         else:
             print(f"(Iter. {i+1}) BestSol = {sol}")
+    
 
 
 if __name__=='__main__':
