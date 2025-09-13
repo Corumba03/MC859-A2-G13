@@ -1,0 +1,13 @@
+(Iter. 1) BestSol = Solution: cost=[-114.00], size=[13], elements={0, 1, 2, 3, 4, 7, 8, 9, 10, 11, 12, 15, 23}
+(Iter. 2) BestSol = Solution: cost=[-114.00], size=[13], elements={0, 1, 2, 3, 4, 7, 8, 9, 10, 11, 12, 15, 23}
+(Iter. 3) BestSol = Solution: cost=[-114.00], size=[13], elements={0, 1, 2, 3, 4, 7, 8, 9, 10, 11, 12, 15, 23}
+(Iter. 4) BestSol = Solution: cost=[-114.00], size=[13], elements={0, 1, 2, 3, 4, 7, 8, 9, 10, 11, 12, 15, 23}
+(Iter. 5) BestSol = Solution: cost=[-114.00], size=[13], elements={0, 1, 2, 3, 4, 7, 8, 9, 10, 11, 12, 15, 23}
+(Iter. 6) BestSol = Solution: cost=[-114.00], size=[13], elements={0, 1, 2, 3, 4, 7, 8, 9, 10, 11, 12, 15, 23}
+(Iter. 7) BestSol = Solution: cost=[-114.00], size=[13], elements={0, 1, 2, 3, 4, 7, 8, 9, 10, 11, 12, 15, 23}
+(Iter. 8) BestSol = Solution: cost=[-114.00], size=[13], elements={0, 1, 2, 3, 4, 7, 8, 9, 10, 11, 12, 15, 23}
+(Iter. 9) BestSol = Solution: cost=[-114.00], size=[13], elements={0, 1, 2, 3, 4, 7, 8, 9, 10, 11, 12, 15, 23}
+
+Final Solution: cost=[-114.00], size=[13], elements={0, 1, 2, 3, 4, 7, 8, 9, 10, 11, 12, 15, 23}
+
+--- Finished in 0.11 seconds ---

@@ -1,0 +1,13 @@
+(Iter. 1) BestSol = Solution: cost=[-301.95], size=[14], elements={2, 35, 36, 38, 43, 14, 47, 49, 17, 21, 24, 26, 27, 29}
+(Iter. 2) BestSol = Solution: cost=[-301.95], size=[14], elements={2, 35, 36, 38, 43, 14, 47, 49, 17, 21, 24, 26, 27, 29}
+(Iter. 3) BestSol = Solution: cost=[-301.95], size=[14], elements={2, 35, 36, 38, 43, 14, 47, 49, 17, 21, 24, 26, 27, 29}
+(Iter. 4) BestSol = Solution: cost=[-301.95], size=[14], elements={2, 35, 36, 38, 43, 14, 47, 49, 17, 21, 24, 26, 27, 29}
+(Iter. 5) BestSol = Solution: cost=[-301.95], size=[14], elements={2, 35, 36, 38, 43, 14, 47, 49, 17, 21, 24, 26, 27, 29}
+(Iter. 6) BestSol = Solution: cost=[-301.95], size=[14], elements={2, 35, 36, 38, 43, 14, 47, 49, 17, 21, 24, 26, 27, 29}
+(Iter. 7) BestSol = Solution: cost=[-301.95], size=[14], elements={2, 35, 36, 38, 43, 14, 47, 49, 17, 21, 24, 26, 27, 29}
+(Iter. 8) BestSol = Solution: cost=[-301.95], size=[14], elements={2, 35, 36, 38, 43, 14, 47, 49, 17, 21, 24, 26, 27, 29}
+(Iter. 9) BestSol = Solution: cost=[-301.95], size=[14], elements={2, 35, 36, 38, 43, 14, 47, 49, 17, 21, 24, 26, 27, 29}
+
+Final Solution: cost=[-301.95], size=[14], elements={2, 35, 36, 38, 43, 14, 47, 49, 17, 21, 24, 26, 27, 29}
+
+--- Finished in 0.62 seconds ---

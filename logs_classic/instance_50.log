@@ -1,0 +1,13 @@
+(Iter. 1) BestSol = Solution: cost=[-598.00], size=[5], elements={2, 20, 40, 25, 29}
+(Iter. 2) BestSol = Solution: cost=[-598.00], size=[5], elements={2, 20, 40, 25, 29}
+(Iter. 3) BestSol = Solution: cost=[-598.00], size=[5], elements={2, 20, 40, 25, 29}
+(Iter. 4) BestSol = Solution: cost=[-598.00], size=[5], elements={2, 20, 40, 25, 29}
+(Iter. 5) BestSol = Solution: cost=[-598.00], size=[5], elements={2, 20, 40, 25, 29}
+(Iter. 6) BestSol = Solution: cost=[-598.00], size=[5], elements={2, 20, 40, 25, 29}
+(Iter. 7) BestSol = Solution: cost=[-598.00], size=[5], elements={2, 20, 40, 25, 29}
+(Iter. 8) BestSol = Solution: cost=[-598.00], size=[5], elements={2, 20, 40, 25, 29}
+(Iter. 9) BestSol = Solution: cost=[-598.00], size=[5], elements={2, 20, 40, 25, 29}
+
+Final Solution: cost=[-598.00], size=[5], elements={2, 20, 40, 25, 29}
+
+--- Finished in 0.36 seconds ---
